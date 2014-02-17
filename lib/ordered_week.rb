@@ -1,0 +1,67 @@
+class OrderedWeek
+  include Enumerable
+
+  VERSION = '0.0.1'
+  WEEK_DAYS = [:sunday, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+
+  @@start_day ||= :monday
+
+  private_constant :WEEK_DAYS
+
+  def self.start_day
+    @@start_day
+  end
+
+  def self.start_day= day
+    return false unless WEEK_DAYS.include?(day)
+    @@start_day = day 
+  end
+
+  def initialize includes_date=nil
+    includes_date = includes_date.is_a?(Date) ? includes_date : Date.today
+    @days = build_days(includes_date)
+  end
+
+  def inspect
+    @days.map {|d| d.strftime("%F")}.inspect.gsub('"','')
+  end
+
+  def to_a
+    @days
+  end
+
+  def each &block
+    @days.each {|d| yield d}
+  end
+
+  def start_date
+    @days.first
+  end
+
+  def end_date
+    @days.last
+  end
+
+  WEEK_DAYS.each_with_index do |day, day_index|
+    define_method day do
+      @days[ day_index - start_day_index ]
+    end
+  end
+
+  private
+
+    def build_days(date)
+      while not date_is_start_of_week(date)
+        date -= 1
+      end
+      (date..date+6).to_a
+    end
+
+    def date_is_start_of_week date
+      date.send( (@@start_day.to_s + ??).to_sym )
+    end
+
+    def start_day_index
+      WEEK_DAYS.index(@@start_day)
+    end
+end
